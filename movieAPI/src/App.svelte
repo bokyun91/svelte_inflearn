@@ -3,30 +3,41 @@
 
 	let apikey = 'e61ff919'
 	let title = ''
-	let movies = null
-	let error = null
-	let loading = false
+	//let promise = new Promise((resolve) => {resolve([])})
+	let promise = Promise.resolve([])
 
-	async function searchMovies() {
-		if (loading) return
-		
-		loading = true
-		try {
-			const res = await axios.get(`http://www.omdbapi.com/?apikey=${apikey}&s=${title}`)
-			console.log(res)
-			movies = res.data.Search
-		} catch(err) {
-			console.log(err.message)
-			error = err
-		} finally {
-			loading = false
-		}
+	function searchMovies() {
+		return new Promise(async (resolve, reject) => {
+			try {
+				const res = await axios.get(`http://www.omdbapi.com/?apikey=${apikey}&s=${title}`)
+				resolve(res.data.Search)
+			} catch(err) {
+				reject(err)
+			} finally {
+				console.log('Done!')
+			}
+		})
 	}
 </script>
 
 <input bind:value={title} />
-<button on:click={searchMovies}>검색!</button>
+<button on:click={() => {
+	promise = searchMovies()
+}}>검색!</button>
 
+{#await promise}
+	<p style="color: royalblue">Loading...</p>
+{:then movies}
+	<ul>
+		{#each movies as movie}
+			<li>{movie.Title}</li>
+		{/each}
+	</ul>
+{:catch error}
+	<p style="color:red;">{error.message}</p>
+{/await}
+
+<!--
 {#if loading}
 	<p style="color: royalblue">Loading...</p>
 {:else if movies}
@@ -38,3 +49,4 @@
 {:else if error}
 	<p style="color:red;">{error.message}</p>
 {/if}
+-->
